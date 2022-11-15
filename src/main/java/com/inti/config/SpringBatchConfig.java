@@ -5,6 +5,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -34,11 +35,14 @@ public class SpringBatchConfig {
 	private ItemProcessor<Personne, Personne> itemProcessor;
 	@Autowired
 	private ItemWriter<Personne> itemWriter;
+	@Autowired
+	private Tasklet tasklet;
 	
 	@Bean
-	public Job job(@Qualifier("step1") Step step1) {
+	public Job job(@Qualifier("step1") Step step1, @Qualifier("step2") Step step2) {
 		return jobBuilderFactory.get("Personne")
 				.start(step1)
+				.next(step2)
 				.build();
 	}
 	
@@ -50,6 +54,14 @@ public class SpringBatchConfig {
 				.reader(itemReader)
 				.processor(itemProcessor)
 				.writer(itemWriter)
+				.build();
+	}
+	
+	@Bean
+	public Step step2() {
+		return stepBuilderFactory
+				.get("Deuxième étape de notre batch : suppression du fichier dataUniv.csv")
+				.tasklet(tasklet)
 				.build();
 	}
 	
